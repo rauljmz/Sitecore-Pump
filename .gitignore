@@ -1,0 +1,8 @@
+*.suo
+bin/
+obj/
+*.user
+*.dll
+*.pubxml
+/PublishProfiles
+packages/
