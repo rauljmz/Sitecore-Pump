@@ -11,6 +11,12 @@ namespace Sitecore.Pump
 {
     class Program
     {
+
+        static void DisplayUsage()
+        {
+            Console.WriteLine("Usage: Sitecore.Pump serialize|deserialize path  [--config configfile databasename]");
+        }
+
         static void Main(string[] args)
         {
 
@@ -20,8 +26,8 @@ namespace Sitecore.Pump
                 var arg = args[index];
                 if (arg.Equals("--config", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    AddConnectionStrings(args[index + 1]);
-                    index++;
+                    AddConnectionStrings(args[index + 1], args[index+2]);
+                    index+=2;
                 }
             }
 
@@ -47,26 +53,27 @@ namespace Sitecore.Pump
             throw new NotImplementedException();
         }
 
-        private static void AddConnectionStrings(string s)
+        private static void AddConnectionStrings(string path, string databasename)
         {
-            using (var fileStream = File.OpenRead(s))
+            using (var fileStream = File.OpenRead(path))
             {
                 var config = new ConfigXmlDocument();
                 config.Load(fileStream);
                 foreach (XmlNode configNode in config.SelectNodes("connectionStrings/add"))
                 {
+                    if (!configNode.Attributes["name"].Value.Equals(databasename))
+                    {
+                        continue;
+                    }
                     ConfigurationManager.ConnectionStrings.Add(new ConnectionStringSettings(
-                          configNode.Attributes["name"].Value,
+                          "sitecoredb",
                     configNode.Attributes["connectionString"].Value
                         ));
                 }
             }
         }
 
-        static void DisplayUsage()
-        {
-            Console.WriteLine("Usage: Sitecore.Pump serialize|deserialize [databasename] [databasename] --config configfile");
-        }
+     
     }
 
 
