@@ -38,17 +38,21 @@ namespace Sitecore.Pump
                 Serialize();
             }
             else
-            {
-                Deserialize(args[1]);
+            {             
+                Deserialize(args[1]);               
             }
 
 
         }
 
-        private static void Deserialize(string path)
+        private static void Deserialize(string path )
         {
+           
             var dir = new DirectoryInfo(path);
             if(!dir.Exists) throw new FileNotFoundException(path);
+
+
+           
 
             foreach (var file in dir.GetFiles("*.item"))
             {
@@ -58,12 +62,40 @@ namespace Sitecore.Pump
                 {
                     var syncitem = SyncItem.ReadItem(new Tokenizer(reader));
                     Console.WriteLine(syncitem.Name);
-                    
+                    Sync(syncitem);                  
                 }
             }
+
             foreach (var subdir in dir.GetDirectories())
             {
                 Deserialize(subdir.FullName);
+            }
+
+        }
+
+        private static void Sync(SyncItem syncitem)
+        {
+            var sitecoreDb = new SitecoreDB();
+            dynamic itemCreated =
+                sitecoreDb.Items.All(where: "WHERE ID=@0", args: syncitem.ID, columns: "Created").FirstOrDefault();
+            var item = new
+                {
+                    ID = syncitem.ID,
+                    Name = syncitem.Name,
+                    TemplateID = syncitem.TemplateID,
+                    MasterID = syncitem.MasterID,
+                    ParentID = syncitem.ParentID,
+                    Updated = DateTime.Now,
+                    Created = itemCreated != null ? itemCreated.Created : DateTime.Now
+                };
+
+            if (itemCreated != null)
+            {
+                sitecoreDb.Items.Update(item, item.ID);
+            }
+            else
+            {
+                sitecoreDb.Items.Insert(item);
             }
         }
 
@@ -76,6 +108,8 @@ namespace Sitecore.Pump
                 Console.Out.WriteLine(item.Name);
             }
         }
+
+
 
         private static void AddConnectionStrings(string path, string databasename)
         {
