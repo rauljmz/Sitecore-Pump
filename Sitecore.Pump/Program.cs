@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using Sitecore.Data.Serialization.ObjectModel;
+using Sitecore.Pump.Entities;
 
 namespace Sitecore.Pump
 {
@@ -20,7 +22,7 @@ namespace Sitecore.Pump
         static void Main(string[] args)
         {
 
-
+            
             for (var index = 0; index < args.Length; index++)
             {
                 var arg = args[index];
@@ -37,40 +39,76 @@ namespace Sitecore.Pump
             }
             else
             {
-                Deserialize();
+                Deserialize(args[1]);
             }
 
 
         }
 
-        private static void Deserialize()
+        private static void Deserialize(string path)
         {
-            throw new NotImplementedException();
+            var dir = new DirectoryInfo(path);
+            if(!dir.Exists) throw new FileNotFoundException(path);
+
+            foreach (var file in dir.GetFiles("*.item"))
+            {
+                Console.Out.WriteLine(file.FullName);
+               
+                using (TextReader reader = new StreamReader(file.OpenRead()))
+                {
+                    var syncitem = SyncItem.ReadItem(new Tokenizer(reader));
+                    Console.WriteLine(syncitem.Name);
+                    
+                }
+            }
+            foreach (var subdir in dir.GetDirectories())
+            {
+                Deserialize(subdir.FullName);
+            }
         }
 
         private static void Serialize()
         {
-            throw new NotImplementedException();
+            var items = new Items();
+          
+            foreach (var item in items.All())
+            {
+                Console.Out.WriteLine(item.Name);
+            }
         }
 
         private static void AddConnectionStrings(string path, string databasename)
         {
+            System.Configuration.Configuration config =
+         ConfigurationManager.OpenExeConfiguration
+                    (ConfigurationUserLevel.None);
+
+            // Add an Application Setting.
+            config.AppSettings.Settings.Add("ModificationDate",
+                           DateTime.Now.ToLongTimeString() + " ");
+
+            // Save the changes in App.config file.
+            config.Save(ConfigurationSaveMode.Modified);
+
+
             using (var fileStream = File.OpenRead(path))
             {
-                var config = new ConfigXmlDocument();
-                config.Load(fileStream);
-                foreach (XmlNode configNode in config.SelectNodes("connectionStrings/add"))
+                var configuration = new ConfigXmlDocument();
+                configuration.Load(fileStream);
+                foreach (XmlNode configNode in configuration.SelectNodes("connectionStrings/add"))
                 {
                     if (!configNode.Attributes["name"].Value.Equals(databasename))
                     {
                         continue;
                     }
-                    ConfigurationManager.ConnectionStrings.Add(new ConnectionStringSettings(
+                    config.ConnectionStrings.ConnectionStrings.Add(new ConnectionStringSettings(
                           "sitecoredb",
                     configNode.Attributes["connectionString"].Value
                         ));
                 }
             }
+            // Save the changes in App.config file.
+            config.Save(ConfigurationSaveMode.Modified);
         }
 
      

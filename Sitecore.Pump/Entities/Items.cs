@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Massive;
+﻿using Massive;
 
 namespace Sitecore.Pump.Entities
 {
@@ -13,4 +8,36 @@ namespace Sitecore.Pump.Entities
         {
         }
     }
+
+    public class SharedFields : DynamicModel
+    {
+        public SharedFields() :base("sitecoredb","SharedFields","Id")
+        {
+        }
+    }
+
+    public class UnversionedFields : DynamicModel
+    {
+        public UnversionedFields()
+            : base("sitecoredb", "UnversionedFields", "Id")
+        {
+        }
+    }
+
+    public class VersionedFields : DynamicModel
+    {
+        public VersionedFields()
+            : base("sitecoredb", "VersionedFields", "Id")
+        {
+        }
+    }
+
+    public class Descendants : DynamicModel
+    {
+        public Descendants()
+            : base("sitecoredb", "Descendants", "Id")
+        {
+        }
+    }
+
 }
