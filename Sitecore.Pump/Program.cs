@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace Sitecore.Pump
 {
@@ -10,29 +13,54 @@ namespace Sitecore.Pump
     {
         static void Main(string[] args)
         {
-            var connectionStrings = new ConnectionStrings();
-           
+
+
             for (var index = 0; index < args.Length; index++)
             {
                 var arg = args[index];
                 if (arg.Equals("--config", StringComparison.InvariantCultureIgnoreCase))
-                {                    
-                    connectionStrings = new ConnectionStrings(args[index+1]);
+                {
+                    AddConnectionStrings(args[index + 1]);
                     index++;
-                }               
+                }
             }
 
-            var serializationManager = new SerializationManager(connectionStrings);
             if (args[0].Equals("serialize", StringComparison.InvariantCultureIgnoreCase))
             {
-                serializationManager.Serialize();
+                Serialize();
             }
             else
             {
-                serializationManager.Deserialize();
+                Deserialize();
             }
 
 
+        }
+
+        private static void Deserialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void Serialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void AddConnectionStrings(string s)
+        {
+            using (var fileStream = File.OpenRead(s))
+            {
+                var config = new ConfigXmlDocument();
+                config.Load(fileStream);
+                foreach (XmlNode configNode in config.SelectNodes("connectionStrings/add"))
+                {
+                    ConfigurationManager.ConnectionStrings.Add(new ConnectionStringSettings(
+                          configNode.Attributes["name"].Value,
+                    configNode.Attributes["connectionString"].Value
+                        ));
+                }
+            }
         }
 
         static void DisplayUsage()
@@ -40,43 +68,7 @@ namespace Sitecore.Pump
             Console.WriteLine("Usage: Sitecore.Pump serialize|deserialize [databasename] [databasename] --config configfile");
         }
     }
-    public class ConnectionStrings
-    {
-        /// <summary>
-        /// Creates conn strings from a standard connectionstring file
-        /// </summary>
-        /// <param name="s"></param>
-        public ConnectionStrings(string s)
-        {
-            throw new NotImplementedException();
-        }
 
-        /// <summary>
-        /// Creates conn strings from the app.config
-        /// </summary>
-        public ConnectionStrings()
-        {
-            throw new NotImplementedException();
-        }
-    }
 
-    public class SerializationManager
-    {
-        private ConnectionStrings _connectionStrings;
-
-        public SerializationManager(ConnectionStrings connectionStrings)
-        {
-            _connectionStrings = connectionStrings;
-        }
-
-        public void Serialize()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Deserialize()
-        {
-            throw new NotImplementedException();
-        }
-    }
+   
 }
