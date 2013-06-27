@@ -1,23 +1,54 @@
 ﻿using System;
+using System.Collections.Generic;
 using Massive;
-
+using System.Linq;
 namespace Sitecore.Pump.Entities
 {
+    public enum RowState
+    {
+        New,
+        Updated,
+        Deleted
+    }
+
     public class SitecoreDB
     {
-        public Items Items { get; set; }
-        public SharedFields SharedFields { get; set; }
-        public UnversionedFields UnversionedFields { get; set; }
-        public VersionedFields VersionedFields { get; set; }
-        public Descendants Descendants { get; set; }
+        public  List<dynamic> Items { get; set; }
+        public List<dynamic> SharedFields { get; set; }
+        public List<dynamic> UnversionedFields { get; set; }
+        public List<dynamic> VersionedFields { get; set; }
+      //  public List<dynamic> Descendants { get; set; }
 
         public SitecoreDB()
         {
-            Items = new Items();
-            SharedFields = new SharedFields();
-            UnversionedFields = new UnversionedFields();
-            VersionedFields = new VersionedFields();
-            Descendants = new Descendants();
+            Items = new Items().All().ToList();
+            SharedFields = new SharedFields().All().ToList();
+            UnversionedFields = new UnversionedFields().All().ToList();
+            VersionedFields = new VersionedFields().All().ToList();
+           // Descendants = new Descendants().All().ToList();
+        }
+
+        public void SaveAll()
+        {
+            SaveTable(new Items(), Items);
+            SaveTable(new SharedFields(), SharedFields);
+            SaveTable(new VersionedFields(), VersionedFields);
+            SaveTable(new UnversionedFields(), UnversionedFields);
+        }
+
+        public void SaveTable(DynamicModel table, List<dynamic> items )
+        {           
+            foreach (dynamic item in items)
+            {
+                if (item.State == RowState.New)
+                {
+                    table.Insert(item);
+                }
+                else if(item.State == RowState.Updated)
+                {
+                    table.Update(item, item.ID);
+                }
+            }
         }
     }
 
